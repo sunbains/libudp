@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <thread>
 
-#include "libnet/udp_socket.h"
+#include "liudp/socket.h"
 
 class Socket_test : public ::testing::Test {
 protected:
@@ -10,12 +10,12 @@ protected:
 };
 
 TEST_F(Socket_test, CreateSocket) {
-    EXPECT_NO_THROW({ udp_library::Socket socket(12345); });
+    EXPECT_NO_THROW({ udp::Socket socket(12345); });
 }
 
 TEST_F(Socket_test, SendReceive) {
-    udp_library::Socket sender(12345);
-    udp_library::Socket receiver(12346);
+    udp::Socket sender(12345);
+    udp::Socket receiver(12346);
 
     std::vector<uint8_t> send_data = {'t', 'e', 's', 't'};
     std::vector<uint8_t> receive_buffer(1024);

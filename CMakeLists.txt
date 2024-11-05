@@ -1,13 +1,20 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(libnet VERSION 1.0.0 LANGUAGES CXX)
+project(libudp VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Library target
-add_library(${PROJECT_NAME} src/socket.cc)
+set(LIBNET_SOURCES src/socket.cc)
+
+SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+
+add_library(${PROJECT_NAME} STATIC ${LIBNET_SOURCES})
+
+IF(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  ADD_DEFINITIONS(-DUNIV_LINUX)
+ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 find_package(Threads REQUIRED)
 
@@ -19,7 +26,14 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE liburing)
+target_link_libraries(${PROJECT_NAME} PRIVATE uring)
+
+option(BUILD_TESTING "Build tests" OFF)
+option(BUILD_EXAMPLES "Build examples" ON)
+
+if(BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 # Testing configuration
 if(BUILD_TESTING)
@@ -40,7 +54,7 @@ if(BUILD_TESTING)
     FetchContent_MakeAvailable(googletest)
 
     # Create test executable
-    add_executable(libnet_tests tests/udp_socket_test.cc)
+    add_executable(libudp_tests tests/udp_socket_test.cc)
 
     # Link against our library and GTest
     target_link_libraries(net_tests
@@ -76,7 +90,7 @@ endif()
 include(GNUInstallDirs)
 
 install(TARGETS ${PROJECT_NAME}
-    EXPORT libnet-targets
+    EXPORT libudp-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

@@ -1,15 +1,11 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
-project(libnet_examples VERSION 1.0.0 LANGUAGES CXX)
+project(EXAMPLES)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(LIBS libudp pthread m uring)
 
-# Add the main library
-add_subdirectory(../libnet ${CMAKE_BINARY_DIR}/libnet)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# Echo example
-add_executable(udp_echo udp_echo_server.cc)
+add_executable(echo echo.cc)
 
-target_link_libraries(udp_echo PRIVATE libnet pthread)
+target_link_libraries(echo PRIVATE ${LIBS})

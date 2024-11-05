@@ -1,0 +1,74 @@
+{
+    "cmake.configureOnOpen": true,
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.installPrefix": "${workspaceFolder}/install",
+    "cmake.configureArgs": [
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DBUILD_EXAMPLES=ON",
+        "-DBUILD_TESTS=ON"
+    ],
+    "editor.formatOnSave": true,
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "files.associations": {
+        "*.h": "cpp",
+        "*.cc": "cpp",
+        "coroutine": "cpp",
+        "vector": "cpp",
+        "string": "cpp",
+        "chrono": "cpp",
+        "memory": "cpp",
+        "system_error": "cpp",
+        "stdexcept": "cpp"
+    },
+    "C_Cpp.default.cppStandard": "c++23",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/include/",
+        "${workspaceFolder}/deps/install/liburing/include"
+    ],
+    "cmake.configureOnOpen": true,
+    "cmake.configureSettings": {
+    "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+    "CMAKE_CXX_STANDARD": "20"
+    },
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.installPrefix": "${workspaceFolder}/install",
+    "cmake.generator": "Ninja",
+    "cmake.debugConfig": {
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.default.includePath": [
+      "${workspaceFolder}/**",
+      "${workspaceFolder}/include",
+      "${workspaceFolder}/src"
+    ],
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+    "C_Cpp.formatting": "clangFormat",
+    "C_Cpp.clang_format_style": "file",
+    "C_Cpp.clang_format_fallbackStyle": "Google",
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    "C_Cpp.codeAnalysis.runAutomatically": true,
+    "C_Cpp.enhancedColorization": "enabled",
+    "editor.formatOnSave": true,
+    "files.associations": {
+      "CMakeLists.txt": "cmake",
+      "*.cmake": "cmake",
+      "*.cmake.in": "cmake"
+    },
+    "files.exclude": {
+      "build/": false,
+      "install/": false,
+      ".vscode/*.log": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.rulers": [132 148],
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+}
+

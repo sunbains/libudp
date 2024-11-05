@@ -1,0 +1,15 @@
+build/
+install/
+.vscode/.cache/
+compile_commands.json
+.clangd/
+.cache/
+*.o
+*.a
+*.so
+*.exe
+*.out
+*~
+.DS_Store
+bin/
+deps/liburing
