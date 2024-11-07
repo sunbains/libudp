@@ -52,6 +52,13 @@ namespace udp {
     std::array<iovec, 1> m_iov;
   };
 
+  struct Completion_operation : public IO_operation {
+    Completion_operation(io_uring* ring) noexcept : IO_operation(ring, IO_operation::Type::COMPLETION) {}
+
+    void submit() override;
+    int reap(io_uring_cqe* cqe) override;
+  };
+
   struct Socket {
     using IO_uring = std::unique_ptr<io_uring>;
 
@@ -63,7 +70,7 @@ namespace udp {
 
     Task<int> send_async(const std::string& address, uint16_t port, const void* data, int n_bytes);
 
-    void wait_for_completion();
+    // Task<int> wait_for_completion();
 
     void close() noexcept;
 

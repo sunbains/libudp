@@ -30,28 +30,23 @@ void Server::run(uint16_t client_port) noexcept {
     Buffer buffer(32);
 
     for (int i = 0; i < 5; ++i) {
-      std::string message;
+      auto recv_task = m_socket.receive_async(buffer);
 
-      {
-        auto promise = m_socket.receive_async(buffer);
-
-        m_socket.wait_for_completion();
-
-        message = std::string(buffer.begin(), buffer.begin() + promise.get_result());
-
-        log_info("Server received: ", message);
-
-        assert(promise.get_result() == message.size());
+      if (!recv_task.is_done()) {
+        recv_task.resume();
       }
 
-      {
-        auto promise = m_socket.send_async("127.0.0.1", client_port, message.c_str(), message.size());
+      auto send_task = m_socket.send_async("127.0.0.1", client_port, buffer.data(), recv_task.get_result());
 
-        m_socket.wait_for_completion();
-
-        log_info("Server sent: ", promise.get_result(), " bytes");
-        assert(promise.get_result() == message.size());
+      if (!send_task.is_done()) {
+        send_task.resume();
       }
+
+      log_info("Server received: ", std::string(buffer.begin(), buffer.begin() + recv_task.get_result()));
+
+      assert(recv_task.get_result() == send_task.get_result());
+
+      log_info("Server sent: ", send_task.get_result(), " bytes");
     }
   } catch (const std::exception& e) {
     log_error("Server error: " + std::string(e.what()));
@@ -84,19 +79,21 @@ void Client::run(uint16_t server_port) noexcept {
 
   try {
     for (int i = 0; i < 5; ++i) {
-      auto send_promise = m_socket.send_async("127.0.0.1", server_port, message.c_str(), message.size());
+      auto send_task = m_socket.send_async("127.0.0.1", server_port, message.c_str(), message.size());
 
-      m_socket.wait_for_completion();
-
-      log_info("Client sent: ", message);
+      if (!send_task.is_done()) {
+        send_task.resume();
+      }
 
       Buffer buffer(32);
 
-      auto recv_promise = m_socket.receive_async(buffer);
+      auto recv_task = m_socket.receive_async(buffer);
 
-      m_socket.wait_for_completion();
+      if (!recv_task.is_done()) {
+        recv_task.resume();
+      }
 
-      std::string echo(buffer.begin(), buffer.begin() + recv_promise.get_result());
+      std::string echo(buffer.begin(), buffer.begin() + recv_task.get_result());
 
       log_info("Client received: ", echo);
     }

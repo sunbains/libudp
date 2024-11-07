@@ -40,8 +40,8 @@ namespace udp {
 
       template<typename U>
       void return_value(U&& value) noexcept {
-        log_debug("Returning value: ", std::forward<U>(value));
         m_result = std::forward<U>(value);
+        log_debug("Returning value: ", m_result);
       }
 
       T m_result;
@@ -78,6 +78,15 @@ namespace udp {
       return *this;
     }
 
+    void resume() {
+      if (m_handle && !m_handle.done()) {
+        m_handle.resume();
+      }
+    }
+
+    bool is_done() const noexcept {
+      return m_handle.done();
+    }
 
     T get_result() {
       if (m_handle.promise().m_exception) {
@@ -96,7 +105,8 @@ namespace udp {
     enum class Type {
       NONE,
       SEND,
-      RECEIVE
+      RECEIVE,
+      COMPLETION
     };
 
     using any_handle = std::coroutine_handle<>;
@@ -124,10 +134,14 @@ namespace udp {
           return "SEND";
         case Type::RECEIVE:
           return "RECEIVE";
+        case Type::COMPLETION:
+          return "COMPLETION";
         default:
           return "NONE";
       }
     }
+
+    int reap();
 
     virtual void submit() = 0;
     virtual int reap(io_uring_cqe* cqe) = 0;

@@ -25,16 +25,26 @@ TEST_F(Socket_test, SendReceive) {
     auto server_receive_task = server.receive_async(receive_buffer);
     auto client_send_task = client.send_async("127.0.0.1", 12346, send_data.data(), send_data.size());
 
-    server.wait_for_completion();
-    client.wait_for_completion();
+    if (!client_send_task.is_done()) {
+        client_send_task.resume();
+    }
+
+    if (!server_receive_task.is_done()) {
+        server_receive_task.resume();
+    }
 
     std::string message(receive_buffer.begin(), receive_buffer.end());
 
     auto server_send_task = server.send_async("127.0.0.1", 12345, message.data(), message.size());
     auto client_receive_task = client.receive_async(receive_buffer);
 
-    server.wait_for_completion();
-    client.wait_for_completion();
+    if (!server_send_task.is_done()) {
+        server_send_task.resume();
+    }
+
+    if (!client_receive_task.is_done()) {
+        client_receive_task.resume();
+    }
 
     auto sent_bytes = client_send_task.get_result();
     auto received_bytes = client_receive_task.get_result();

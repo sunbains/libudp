@@ -104,6 +104,35 @@ namespace udp {
     return ret;
   }
 
+  int Completion_operation::reap(io_uring_cqe* cqe) {
+    int ret;
+
+    if (auto io_operation = static_cast<IO_operation*>(io_uring_cqe_get_data(cqe)); io_operation != nullptr) [[likely]] {
+      log_debug(io_operation->type(), " completion queue event: ret: ", abs(cqe->res));
+      ret = io_operation->reap(cqe);
+      complete(ret);
+    }
+
+    io_uring_cqe_seen(m_ring, cqe);
+
+    return ret;
+  }
+
+  void Completion_operation::submit() {
+    int ret;
+    io_uring_cqe* cqe;
+
+    while ((ret = io_uring_wait_cqe(m_ring, &cqe)) == -EAGAIN || ret == -EINTR) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
+    if (ret < 0) [[unlikely]] {
+      throw std::runtime_error(std::string("io_uring_wait_cqe failed: ") + strerror(-ret));
+    }
+
+    reap(cqe);
+  }
+
   Socket::Socket(uint16_t port) : m_socket_fd(-1), m_is_initialized(false) {
 
     m_ring = std::make_unique<io_uring>();
@@ -163,35 +192,23 @@ namespace udp {
 
     Send_operation op(m_ring.get(), m_socket_fd, data, n_bytes, addr);
 
-    co_return co_await op;
+    co_await op;
+
+    log_debug("Send operation in progress");
+
+    Completion_operation completion(m_ring.get());
+
+    co_return co_await completion;
   }
 
   Task<int> Socket::receive_async(Buffer& buffer) {
     Receive_operation op(m_ring.get(), m_socket_fd, buffer);
 
-    co_return co_await op;
-  }
+    co_await op;
 
-  void Socket::wait_for_completion() {
-    int ret;
-    io_uring_cqe* cqe;
+    Completion_operation completion(m_ring.get());
 
-    while ((ret = io_uring_wait_cqe(m_ring.get(), &cqe)) == -EAGAIN || ret == -EINTR) {
-      log_debug("Waiting for completion queue to be ready...");
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-    if (ret < 0) [[unlikely]] {
-      throw std::runtime_error(std::string("Failed to wait for completion: ") + strerror(-ret));
-    }
-
-    if (auto io_operation = static_cast<IO_operation*>(io_uring_cqe_get_data(cqe)); io_operation != nullptr) [[likely]] {
-      log_debug(io_operation->type(), " completion queue event: ret: ", abs(cqe->res));
-      const auto ret = io_operation->reap(cqe);
-      io_operation->complete(ret);
-    }
-
-    io_uring_cqe_seen(m_ring.get(), cqe);
+    co_return co_await completion;
   }
 
   void Socket::close() noexcept {
