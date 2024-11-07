@@ -19,16 +19,16 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES "Linux")
 find_package(Threads REQUIRED)
 
 target_include_directories(${PROJECT_NAME}
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE uring)
 
-option(BUILD_TESTING "Build tests" OFF)
+option(BUILD_TESTING "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 
 if(BUILD_EXAMPLES)
@@ -37,68 +37,63 @@ endif()
 
 # Testing configuration
 if(BUILD_TESTING)
-    enable_testing()
+  message(STATUS "Building tests")
 
-    # Include FetchContent for downloading GTest
-    include(FetchContent)
+  enable_testing()
 
-    # Download and configure Google Test
-    FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG release-1.12.1
-    )
+  # Include FetchContent for downloading GTest
+  include(FetchContent)
 
-    # For Windows: Prevent overriding the parent project's compiler/linker settings
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
+  # Download and configure Google Test
+  FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-1.12.1
+  )
 
-    # Create test executable
-    add_executable(libudp_tests tests/udp_socket_test.cc)
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
 
-    # Link against our library and GTest
-    target_link_libraries(net_tests
-        PRIVATE
-            net
-            GTest::gtest_main
-            GTest::gmock_main
-            caspaxos
-    )
+  # Create test executable
+  add_executable(libudp_tests tests/udp_socket_test.cc)
 
-    target_link_libraries(caspaxos_tests
-        PRIVATE
-            caspaxos
-            GTest::gtest_main
-            GTest::gmock_main
-            caspaxos
-    )
+  # Link against our library and GTest
+  target_link_libraries(libudp_tests
+    PRIVATE
+    ${PROJECT_NAME}
+    GTest::gtest_main
+    GTest::gmock_main
+    ${PROJECT_NAME}
+    uring
+  )
 
-    # Include test directory
-    target_include_directories(net_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_SOURCE_DIR}/include)
-    target_include_directories(caspaxos_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  # Include test directory
+  target_include_directories(libudp_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-    # Discover tests
-    include(GoogleTest)
-    gtest_discover_tests(net_tests)
-    gtest_discover_tests(caspaxos_tests)
+  # Discover tests
+  include(GoogleTest)
+  gtest_discover_tests(libudp_tests)
 
-    # Add custom target for running tests with detailed output
-    add_custom_target(test_verbose COMMAND ${CMAKE_CTEST_COMMAND} --verbose DEPENDS net_tests caspaxos_tests)
+  # Add custom target for running tests with detailed output
+  add_custom_target(test_verbose COMMAND ${CMAKE_CTEST_COMMAND} --verbose DEPENDS libudp_tests)
+ else()
+  message(STATUS "Tests disabled")
 endif()
 
 # Installation
 include(GNUInstallDirs)
 
 install(TARGETS ${PROJECT_NAME}
-    EXPORT libudp-targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  EXPORT libudp-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 install(DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
 # External dependencies downloaded from GitHub.

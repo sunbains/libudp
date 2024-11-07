@@ -20,7 +20,7 @@ namespace udp {
     auto sqe = io_uring_get_sqe(m_ring);
 
     if (sqe == nullptr) {
-      throw std::runtime_error("Failed to get SQE");
+      throw std::runtime_error(std::string(type()) + " failed to get SQE");
     }
 
     sqe->flags |= IOSQE_ASYNC;
@@ -43,11 +43,11 @@ namespace udp {
       addr.append(std::to_string(ntohs(m_addr.sin_port)));
     }
 
-    auto ret = io_uring_submit(m_ring);
+    const auto ret = io_uring_submit(m_ring);
 
     if (ret < 0) {
-      log_error("Failed to submit operation: ", strerror(ret));
-      throw std::runtime_error("Failed to submit operation");
+      log_error("Failed to submit ", type(), " operation: ", strerror(ret));
+      throw std::runtime_error("Failed to submit " + std::string(type()) + " operation");
     }
   }
 
@@ -62,7 +62,7 @@ namespace udp {
     auto sqe = io_uring_get_sqe(m_ring);
 
     if (sqe == nullptr) {
-      throw std::runtime_error("Failed to get SQE");
+      throw std::runtime_error(std::string(type()) + " failed to get SQE");
     }
 
     assert(m_fd >= 0);
@@ -89,14 +89,11 @@ namespace udp {
       addr.append(std::to_string(ntohs(m_client_addr.sin_port)));
     }
 
-    int ret;
-
-    while ((ret = io_uring_submit_and_wait(m_ring, 1)) == -EAGAIN || ret == -EINTR) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+    const auto ret = io_uring_submit(m_ring);
 
     if (ret < 0) {
-      throw std::runtime_error("Failed to submit operation");
+      log_error("Failed to submit ", type(), " operation: ", strerror(ret));
+      throw std::runtime_error("Failed to submit " + std::string(type()) + " operation");
     }
   }
 
@@ -154,7 +151,7 @@ namespace udp {
     close();
   }
 
-  Task<int> Socket::send_async(const std::string& address, uint16_t port, const char* data, int n_bytes) {
+  Task<int> Socket::send_async(const std::string& address, uint16_t port, const void* data, int n_bytes) {
     sockaddr_in addr{};
 
     addr.sin_family = AF_INET;

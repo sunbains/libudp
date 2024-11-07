@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <thread>
 
-#include "liudp/socket.h"
+#include "libudp/socket.h"
 
 class Socket_test : public ::testing::Test {
 protected:
@@ -14,17 +14,38 @@ TEST_F(Socket_test, CreateSocket) {
 }
 
 TEST_F(Socket_test, SendReceive) {
-    udp::Socket sender(12345);
-    udp::Socket receiver(12346);
+    Logger::get_instance().set_level(Logger::Level::WARN);
 
-    std::vector<uint8_t> send_data = {'t', 'e', 's', 't'};
-    std::vector<uint8_t> receive_buffer(1024);
+    udp::Socket client(12345);
+    udp::Socket server(12346);
 
-    auto receive_task = receiver.receive_async(receive_buffer);
-    auto send_task = sender.send_async("127.0.0.1", 12346, send_data);
+    udp::Buffer send_data = {'t', 'e', 's', 't'};
+    udp::Buffer receive_buffer(send_data.size());
 
-    auto sent_bytes = send_task.get_result();
-    auto received_bytes = receive_task.get_result();
+    log_debug("Waiting for server receive completion");
+    auto server_receive_task = server.receive_async(receive_buffer);
+
+    log_debug("Waiting for client send completion");
+    auto client_send_task = client.send_async("127.0.0.1", 12346, send_data.data(), send_data.size());
+
+    log_debug("Waiting for server receive completion");
+    server.wait_for_completion();
+
+    log_debug("Waiting for client send completion");
+    client.wait_for_completion();
+
+    std::string message(receive_buffer.begin(), receive_buffer.end());
+
+    log_debug("Server send message: ", message);
+
+    auto server_send_task = server.send_async("127.0.0.1", 12345, message.data(), message.size());
+    auto client_receive_task = client.receive_async(receive_buffer);
+
+    server.wait_for_completion();
+    client.wait_for_completion();
+
+    auto sent_bytes = client_send_task.get_result();
+    auto received_bytes = client_receive_task.get_result();
 
     EXPECT_EQ(sent_bytes, send_data.size());
     EXPECT_EQ(received_bytes, send_data.size());
