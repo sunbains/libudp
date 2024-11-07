@@ -15,7 +15,7 @@ namespace udp {
 
   struct Send_operation : public IO_operation {
     Send_operation(io_uring* ring, int fd, const void* data, int n_bytes, const sockaddr_in& addr) noexcept
-      : IO_operation(ring, IO_operation::Type::SEND), m_fd(fd), m_data(data), m_n_bytes(n_bytes), m_addr(addr) {
+      : IO_operation(ring, IO_operation::Type::SEND), m_fd(fd), m_n_bytes(n_bytes), m_data(data), m_addr(addr) {
 
       m_iov[0].iov_len = m_n_bytes;
       m_iov[0].iov_base = const_cast<void*>(m_data);
@@ -25,10 +25,10 @@ namespace udp {
     int reap(io_uring_cqe* cqe) override;
 
     int m_fd{-1};
+    int m_n_bytes;
     msghdr m_msg_hdr{};
     sockaddr_in m_addr;
     const void* m_data;
-    int m_n_bytes;
     std::array<iovec, 1> m_iov;
   };
 
