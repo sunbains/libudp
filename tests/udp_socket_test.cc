@@ -22,21 +22,13 @@ TEST_F(Socket_test, SendReceive) {
     udp::Buffer send_data = {'t', 'e', 's', 't'};
     udp::Buffer receive_buffer(send_data.size());
 
-    log_debug("Waiting for server receive completion");
     auto server_receive_task = server.receive_async(receive_buffer);
-
-    log_debug("Waiting for client send completion");
     auto client_send_task = client.send_async("127.0.0.1", 12346, send_data.data(), send_data.size());
 
-    log_debug("Waiting for server receive completion");
     server.wait_for_completion();
-
-    log_debug("Waiting for client send completion");
     client.wait_for_completion();
 
     std::string message(receive_buffer.begin(), receive_buffer.end());
-
-    log_debug("Server send message: ", message);
 
     auto server_send_task = server.send_async("127.0.0.1", 12345, message.data(), message.size());
     auto client_receive_task = client.receive_async(receive_buffer);
