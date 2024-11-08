@@ -70,9 +70,9 @@ namespace udp {
 
     Task<int> send_async(const std::string& address, uint16_t port, const void* data, int n_bytes);
 
-    // Task<int> wait_for_completion();
-
     void close() noexcept;
+
+    Socket& operator=(Socket&& rhs) noexcept;
 
     IO_uring m_ring{};
     int m_socket_fd{-1};

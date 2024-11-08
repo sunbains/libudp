@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(LIBNET_SOURCES src/socket.cc)
+set(LIBNET_SOURCES udp/src/socket.cc mesh/src/mesh.cc mesh/src/node.cc)
 
 SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 

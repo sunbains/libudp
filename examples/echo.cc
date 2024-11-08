@@ -5,6 +5,8 @@
 
 using namespace udp;
 
+static constexpr int TOTAL_MESSAGES = 10;
+
 struct Server {
   /**
    * Constructor
@@ -29,7 +31,7 @@ void Server::run(uint16_t client_port) noexcept {
   try {
     Buffer buffer(32);
 
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < TOTAL_MESSAGES; ++i) {
       auto recv_task = m_socket.receive_async(buffer);
 
       if (!recv_task.is_done()) {
@@ -78,7 +80,7 @@ void Client::run(uint16_t server_port) noexcept {
   const std::string message = "Hello, world!";
 
   try {
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < TOTAL_MESSAGES; ++i) {
       auto send_task = m_socket.send_async("127.0.0.1", server_port, message.c_str(), message.size());
 
       if (!send_task.is_done()) {
