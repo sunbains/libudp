@@ -8,10 +8,19 @@
 
 namespace cli {
 
+using String_to_int_map = std::map<std::string, int>;
+using String_to_double_map = std::map<std::string, double>;
+using String_to_string_map = std::map<std::string, std::string>;
+
 template<typename T>
 concept Parseable = requires(std::string s) {
-  { std::stoi(s) } -> std::convertible_to<T>;
-} || std::same_as<T, std::string> || std::same_as<T, bool>;
+  { std::stoi(s) } -> std::convertible_to<T>; }
+  || std::same_as<T, std::string>
+  || std::same_as<T, bool>
+  || std::same_as<T, double>
+  || std::same_as<T, String_to_int_map::value_type>
+  || std::same_as<T, String_to_double_map::value_type>
+  || std::same_as<T, String_to_string_map::value_type>;
 
 template<typename T>
 requires Parseable<T>
@@ -36,10 +45,10 @@ struct Array_value {
   /* Access */
   const std::vector<T>& values() const { return m_values; }
   std::vector<T>& values() { return m_values; }
-  
+
   size_t size() const { return m_values.size(); }
   bool empty() const { return m_values.empty(); }
-  
+
   T& operator[](size_t index) { return m_values[index]; }
   const T& operator[](size_t index) const { return m_values[index]; }
 

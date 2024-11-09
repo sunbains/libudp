@@ -20,10 +20,6 @@
 
 namespace cli {
 
-// Forward declarations
-//template<typename T> class Array_value;
-//template<typename K, typename V> class Map_value;
-
 /* Value type concepts */
 template<typename T>
 concept Basic_value = std::same_as<T, bool> || std::same_as<T, int> || std::same_as<T, double> || std::same_as<T, std::string>;
@@ -48,7 +44,7 @@ struct Option_descriptor {
   std::string description;
 
   /* Whether the option is required */
-  bool required = false;
+  bool required{};
 
   /* Default value if none provided */
   std::optional<std::string> default_value;
@@ -190,16 +186,82 @@ std::optional<T> Options::get(const std::string& name) const {
 
 template<typename T>
 void Options::handle_value(const std::string& name, const std::string& value) {
-  if constexpr (std::same_as<T, bool>) {
-    m_values[name] = (value == "true" || value == "1");
-  } else if constexpr (std::same_as<T, int>) {
-    m_values[name] = std::stoi(value);
-  } else if constexpr (std::same_as<T, double>) {
-    m_values[name] = std::stod(value);
-  } else if constexpr (std::same_as<T, std::string>) {
-    m_values[name] = value;
-  } else if constexpr (requires { typename T::value_type; }) {
-    m_values[name] = T::parse(value);
+  try {
+    if constexpr (std::same_as<T, bool>) {
+      /* Handle boolean values */
+      std::string lower_value = value;
+      std::transform(lower_value.begin(), lower_value.end(), lower_value.begin(), ::tolower);
+
+      m_values[name] = (lower_value == "true" || lower_value == "1" || lower_value == "yes" || lower_value == "on");
+    } else if constexpr (std::same_as<T, int>) {
+      /* Handle integer values */
+      size_t pos = 0;
+      int result = std::stoi(value, &pos);
+
+      if (pos != value.length()) {
+        throw Parse_error(std::format("Invalid integer value: '{}'", value));
+      }
+
+      m_values[name] = result;
+
+    } else if constexpr (std::same_as<T, double>) {
+      /* Handle floating-point values */
+      size_t pos = 0;
+      double result = std::stod(value, &pos);
+
+      if (pos != value.length()) {
+        throw Parse_error(std::format("Invalid floating-point value: '{}'", value));
+      }
+
+      m_values[name] = result;
+
+    } else if constexpr (std::same_as<T, std::string>) {
+      /* Handle string values directly */
+      m_values[name] = value;
+
+    } else if constexpr (requires { typename T::value_type; }) {
+
+      if constexpr (std::same_as<T, Array_value<typename T::value_type>>) {
+        /* Handle Array_value types */
+        auto result = T::parse(value);
+
+        if (!result) {
+          throw Parse_error(std::format("Failed to parse array value: '{}'", value));
+        }
+
+        m_values[name] = *result;
+
+      } else if constexpr (std::same_as<T, Map_value<std::string, typename T::mapped_type>>) {
+        /* Handle Map_value types */
+        auto result = T::parse(value);
+
+        if (!result) {
+          throw Parse_error(std::format("Failed to parse map value: '{}'", value));
+        }
+
+        m_values[name] = *result;
+      } else {
+        throw Option_error(std::format("Unsupported option type for '{}'", name));
+      }
+
+    } else {
+      throw Option_error(std::format("Unsupported option type for '{}'", name));
+    }
+
+    /* Validate the parsed value if a validator exists */
+    if (auto it = m_validators.find(name); it != m_validators.end()) {
+      if (!it->second(value)) {
+        throw Validation_error(std::format("Validation failed for option '{}' with value '{}'", name, value));
+      }
+    }
+  } catch (const Parse_error&) {
+    /* Re-throw parsing errors */
+    throw;
+  } catch (const Validation_error&) {
+    /* Re-throw validation errors */
+    throw;
+  } catch (const std::exception& e) {
+    throw Parse_error(std::format("Failed to parse option '{}' with value '{}': {}", name, value, e.what()));
   }
 }
 
