@@ -188,4 +188,19 @@ std::optional<T> Options::get(const std::string& name) const {
   return std::nullopt;
 }
 
+template<typename T>
+void Options::handle_value(const std::string& name, const std::string& value) {
+  if constexpr (std::same_as<T, bool>) {
+    m_values[name] = (value == "true" || value == "1");
+  } else if constexpr (std::same_as<T, int>) {
+    m_values[name] = std::stoi(value);
+  } else if constexpr (std::same_as<T, double>) {
+    m_values[name] = std::stod(value);
+  } else if constexpr (std::same_as<T, std::string>) {
+    m_values[name] = value;
+  } else if constexpr (requires { typename T::value_type; }) {
+    m_values[name] = T::parse(value);
+  }
+}
+
 } // namespace cli

@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(LIBNET_SOURCES udp/src/socket.cc mesh/src/mesh.cc mesh/src/node.cc)
+set(LIBNET_SOURCES udp/src/socket.cc mesh/src/mesh.cc mesh/src/node.cc cli/src/cli.cc)
 
 SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
@@ -57,7 +57,7 @@ if(BUILD_TESTING)
 
   # Create test executable
   add_executable(libudp_tests tests/udp_socket_test.cc)
-  add_executable(cli_tests tests/cli_tests.cc)
+  add_executable(cli_tests tests/cli_tests cli/src/cli.cc)
 
   # Link against our library and GTest
   target_link_libraries(libudp_tests
