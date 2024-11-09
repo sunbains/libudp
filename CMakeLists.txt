@@ -58,6 +58,7 @@ if(BUILD_TESTING)
   # Create test executable
   add_executable(libudp_tests tests/udp_socket_test.cc)
   add_executable(cli_tests tests/cli_tests cli/src/cli.cc)
+  add_executable(cli_collection_tests tests/cli_tests cli/src/cli.cc)
 
   # Link against our library and GTest
   target_link_libraries(libudp_tests
@@ -77,9 +78,18 @@ if(BUILD_TESTING)
     ${PROJECT_NAME}
   )
 
+  target_link_libraries(cli_collection_tests
+    PRIVATE
+    ${PROJECT_NAME}
+    GTest::gtest_main
+    GTest::gmock_main
+    ${PROJECT_NAME}
+  )
+
   # Include test directory
   target_include_directories(libudp_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_include_directories(cli_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(cli_collection_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
   # Discover tests
   include(GoogleTest)
