@@ -57,6 +57,7 @@ if(BUILD_TESTING)
 
   # Create test executable
   add_executable(libudp_tests tests/udp_socket_test.cc)
+  add_executable(cli_tests tests/cli_tests.cc)
 
   # Link against our library and GTest
   target_link_libraries(libudp_tests
@@ -68,15 +69,25 @@ if(BUILD_TESTING)
     uring
   )
 
+  target_link_libraries(cli_tests
+    PRIVATE
+    ${PROJECT_NAME}
+    GTest::gtest_main
+    GTest::gmock_main
+    ${PROJECT_NAME}
+  )
+
   # Include test directory
   target_include_directories(libudp_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_include_directories(cli_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
   # Discover tests
   include(GoogleTest)
   gtest_discover_tests(libudp_tests)
+  gtest_discover_tests(cli_tests)
 
   # Add custom target for running tests with detailed output
-  add_custom_target(test_verbose COMMAND ${CMAKE_CTEST_COMMAND} --verbose DEPENDS libudp_tests)
+  add_custom_target(test_verbose COMMAND ${CMAKE_CTEST_COMMAND} --verbose DEPENDS libudp_tests cli_tests)
  else()
   message(STATUS "Tests disabled")
 endif()

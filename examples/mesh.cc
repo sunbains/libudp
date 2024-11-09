@@ -17,8 +17,8 @@ inline mesh::Node* udp::Task<mesh::Node*>::await_resume() {
   return m_handle.promise().m_node;
 }
 
-static Task example_usage() {
-  auto node = std::make_shared<mesh::Node>(mesh::Endpoint("node1", 8080));
+static Task run() {
+  auto node = std::make_shared<mesh::Node>(mesh::Endpoint("127.0.0.1", 8080));
 
   /* Subscribe to events */
   node->subscribe("peer_connected", [](const std::shared_ptr<mesh::events::Event>& event) -> Task {
@@ -54,9 +54,12 @@ static Task example_usage() {
 }
 
 int main(int argc, char** argv) {
+  Logger::get_instance().set_level(Logger::Level::INFO);
+
+  log_info("Starting UDP mesh example...");
 
   try {
-    auto task = example_usage();
+    auto task = run();
 
     /* Wait for completion */
     std::this_thread::sleep_for(std::chrono::seconds(65));
